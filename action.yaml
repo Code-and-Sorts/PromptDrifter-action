@@ -1,0 +1,73 @@
+name: 'Run PromptDrifter'
+description: 'Runs PromptDrifter to test prompt drift for test files.'
+author: 'CodeAndSorts'
+
+inputs:
+  test-files:
+    description: 'Glob pattern for the PromptDrifter YAML test files to run (e.g., ./tests/*.yaml, promptdrifter.yaml).'
+    required: true
+  config-dir:
+    description: 'Directory containing PromptDrifter configuration files (if any, defaults to working-directory).'
+    required: false
+    default: '.'
+  no-cache:
+    description: 'Disable response caching. Set to "true" to disable.'
+    required: false
+    default: 'false'
+  cache-db-path:
+    description: 'Path to the cache database file (e.g., .promptdrifter.cache.db).'
+    required: false
+  promptdrifter-version:
+    description: 'The version of PromptDrifter to install (e.g., "0.0.1", "latest", or a git ref like "main").'
+    required: false
+    default: 'latest'
+  working-directory:
+    description: 'The working directory to run the tests from.'
+    required: false
+    default: '.'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+
+    - name: Install PromptDrifter
+      shell: bash
+      run: |
+        echo "Installing PromptDrifter version: ${{ inputs.promptdrifter-version }}"
+        if [[ "${{ inputs.promptdrifter-version }}" == "latest" ]]; then
+          pip install promptdrifter
+        elif [[ "${{ inputs.promptdrifter-version }}" == *.*.* ]]; then # Basic check for a version number
+          pip install promptdrifter==${{ inputs.promptdrifter-version }}
+        else # Assume it's a git ref (branch, tag, commit)
+          pip install "git+https://github.com/CodeAndSorts/PromptDrifter.git@${{ inputs.promptdrifter-version }}#egg=promptdrifter"
+        fi
+        # Ensure promptdrifter is in PATH if installed to user's local bin
+        if [[ -d "$HOME/.local/bin" ]]; then
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+        fi
+
+    - name: Run PromptDrifter
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        CMD="promptdrifter run"
+        if [[ "${{ inputs.no-cache }}" == "true" ]]; then
+          CMD="$CMD --no-cache"
+        fi
+        if [[ -n "${{ inputs.cache-db-path }}" ]]; then
+          CMD="$CMD --cache-db '${{ inputs.cache-db-path }}'" # Quoted for safety
+        fi
+        if [[ -n "${{ inputs.config-dir }}" && "${{ inputs.config-dir }}" != "." ]]; then
+          CMD="$CMD --config-dir '${{ inputs.config-dir }}'" # Quoted for safety
+        fi
+
+        # Add test files. Input can be a space-separated list or a single glob.
+        # The shell will handle glob expansion.
+        CMD="$CMD ${{ inputs.test-files }}"
+
+        echo "Executing: $CMD"
+        $CMD
