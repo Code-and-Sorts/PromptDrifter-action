@@ -17,17 +17,12 @@ jobs:
           mkdir -p tests
           cat > tests/sample.yaml << 'EOF'
           version: "0.1"
-          providers:
+          adapters:
             - name: openai
               model: gpt-4o-mini
               api_key: env:OPENAI_API_KEY
-          tests:
-            - name: "Basic test"
-              prompt: "Say hello"
-              expected: "Hello!"
-              assertion: exact_match
           EOF
-      
+
       - name: Test validate command
         uses: ./
         with:
@@ -40,13 +35,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Test init command
         uses: ./
         with:
           command: 'init'
           directory: 'test-init-dir'
-      
+
       - name: Verify init created files
         run: |
           ls -la test-init-dir/
@@ -125,18 +120,13 @@ jobs:
           mkdir -p tests
           cat > tests/multi-provider.yaml << 'EOF'
           version: "0.1"
-          providers:
+          adapters:
             - name: openai
               model: gpt-4o-mini
               api_key: env:OPENAI_API_KEY
             - name: claude
               model: claude-3-haiku
               api_key: env:CLAUDE_API_KEY
-          tests:
-            - name: "Multi-provider test"
-              prompt: "Say hello"
-              expected: "Hello!"
-              assertion: exact_match
           EOF
 
       - name: Test with multiple fake API keys
