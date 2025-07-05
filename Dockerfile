@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir promptdrifter
+RUN pip install --no-cache-dir promptdrifter==0.0.2
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

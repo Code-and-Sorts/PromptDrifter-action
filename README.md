@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./docs/img/logo.svg" alt="PromptDrifter Logo" width="100"/>
+</p>
+
 # PromptDrifter GitHub Action
 
 Docker-based GitHub Action for running [PromptDrifter](https://github.com/Code-and-Sorts/PromptDrifter) tests in CI/CD workflows to detect prompt drift and LLM response changes.
@@ -10,6 +14,22 @@ Docker-based GitHub Action for running [PromptDrifter](https://github.com/Code-a
 - 📋 **Multiple Formats**: Support for various drift detection types
 - ⚡ **Fast**: Built-in caching for faster subsequent runs
 - 🌐 **Multi-Provider**: Support for OpenAI, Claude, Gemini, and more
+
+## Versioning
+
+PromptDrifter Action versions are kept in sync with the PromptDrifter CLI for clarity:
+
+- **Action v0.0.2** → **CLI v0.0.2**
+- **Action v0.0.3** → **CLI v0.0.3**
+- etc.
+
+This ensures you know exactly which CLI version you're getting and can pin to specific, tested combinations.
+
+### Version Compatibility
+
+| Action Version | CLI Version | Status     |
+|----------------|-------------|------------|
+| `v0.0.2`       | `0.0.2`     | ✅ Current |
 
 ## Usage
 
@@ -24,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: Code-and-Sorts/PromptDrifter-action@v0.0.1
+      - uses: Code-and-Sorts/PromptDrifter-action@v0.0.2
         with:
           files: 'tests/promptdrifter.yaml'
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
@@ -41,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: Code-and-Sorts/PromptDrifter-action@v0.0.1
+      - uses: Code-and-Sorts/PromptDrifter-action@v0.0.2
         with:
           files: |
             tests/openai-tests.yaml
