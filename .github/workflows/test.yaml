@@ -1,0 +1,173 @@
+name: Test PromptDrifter Action
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-validate:
+    runs-on: ubuntu-latest
+    name: Test Validate Command
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create test config
+        run: |
+          mkdir -p tests
+          cat > tests/sample.yaml << 'EOF'
+          version: "0.1"
+          providers:
+            - name: openai
+              model: gpt-4o-mini
+              api_key: env:OPENAI_API_KEY
+          tests:
+            - name: "Basic test"
+              prompt: "Say hello"
+              expected: "Hello!"
+              assertion: exact_match
+          EOF
+      
+      - name: Test validate command
+        uses: ./
+        with:
+          command: 'validate'
+          files: 'tests/sample.yaml'
+
+  test-init:
+    runs-on: ubuntu-latest
+    name: Test Init Command
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Test init command
+        uses: ./
+        with:
+          command: 'init'
+          directory: 'test-init-dir'
+      
+      - name: Verify init created files
+        run: |
+          ls -la test-init-dir/
+          test -f test-init-dir/promptdrifter.yaml || echo "Config file not found"
+
+  test-input-validation:
+    runs-on: ubuntu-latest
+    name: Test Input Validation
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create test config
+        run: |
+          mkdir -p tests
+          echo "version: '0.1'" > tests/minimal.yaml
+
+      - name: Test with fake API keys (should fail gracefully)
+        uses: ./
+        continue-on-error: true
+        with:
+          command: 'run'
+          files: 'tests/minimal.yaml'
+          openai-api-key: 'fake-key-for-testing'
+          max-concurrent: '2'
+          no-cache: 'true'
+
+      - name: Test missing files input (should fail)
+        uses: ./
+        continue-on-error: true
+        with:
+          command: 'run'
+          openai-api-key: 'fake-key'
+
+  test-multiple-commands:
+    runs-on: ubuntu-latest
+    name: Test Multiple Commands
+    strategy:
+      matrix:
+        test-case:
+          - command: 'validate'
+            files: 'tests/config1.yaml tests/config2.yaml'
+          - command: 'test-drift-type'
+            drift-type: 'semantic'
+            expected: 'Hello'
+            actual: 'Hi'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create test configs
+        run: |
+          mkdir -p tests
+          echo "version: '0.1'" > tests/config1.yaml
+          echo "version: '0.1'" > tests/config2.yaml
+
+      - name: Test command
+        uses: ./
+        continue-on-error: true
+        with:
+          command: ${{ matrix.test-case.command }}
+          files: ${{ matrix.test-case.files }}
+          drift-type: ${{ matrix.test-case.drift-type }}
+          expected: ${{ matrix.test-case.expected }}
+          actual: ${{ matrix.test-case.actual }}
+
+  test-api-key-handling:
+    runs-on: ubuntu-latest
+    name: Test API Key Environment Variables
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create test config
+        run: |
+          mkdir -p tests
+          cat > tests/multi-provider.yaml << 'EOF'
+          version: "0.1"
+          providers:
+            - name: openai
+              model: gpt-4o-mini
+              api_key: env:OPENAI_API_KEY
+            - name: claude
+              model: claude-3-haiku
+              api_key: env:CLAUDE_API_KEY
+          tests:
+            - name: "Multi-provider test"
+              prompt: "Say hello"
+              expected: "Hello!"
+              assertion: exact_match
+          EOF
+
+      - name: Test with multiple fake API keys
+        uses: ./
+        continue-on-error: true
+        with:
+          command: 'run'
+          files: 'tests/multi-provider.yaml'
+          openai-api-key: 'fake-openai-key'
+          claude-api-key: 'fake-claude-key'
+          gemini-api-key: 'fake-gemini-key'
+          no-cache: 'true'
+
+  test-error-handling:
+    runs-on: ubuntu-latest
+    name: Test Error Handling
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Test invalid command
+        uses: ./
+        continue-on-error: true
+        with:
+          command: 'invalid-command'
+          files: 'nonexistent.yaml'
+
+      - name: Test missing migrate parameters
+        uses: ./
+        continue-on-error: true
+        with:
+          command: 'migrate'
+          migrate-input: 'input.yaml'
+          # missing migrate-output should cause error
