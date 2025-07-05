@@ -18,9 +18,16 @@ jobs:
           cat > tests/sample.yaml << 'EOF'
           version: "0.1"
           adapters:
-            - name: openai
-              model: gpt-4o-mini
-              api_key: env:OPENAI_API_KEY
+            - id: test-validation
+              prompt: "Say hello"
+              expect_substring: "hello"
+              adapter:
+                - type: openai
+                  model: gpt-4o-mini
+                  max_tokens: 50
+                  temperature: 0.7
+              tags:
+                - test
           EOF
 
       - name: Test validate command
@@ -57,7 +64,19 @@ jobs:
       - name: Create test config
         run: |
           mkdir -p tests
-          echo "version: '0.1'" > tests/minimal.yaml
+          cat > tests/minimal.yaml << 'EOF'
+          version: "0.1"
+          adapters:
+            - id: minimal-test
+              prompt: "Test"
+              expect_substring: "test"
+              adapter:
+                - type: openai
+                  model: gpt-4o-mini
+                  max_tokens: 10
+              tags:
+                - minimal
+          EOF
 
       - name: Test with fake API keys (should fail gracefully)
         uses: ./
@@ -95,8 +114,32 @@ jobs:
       - name: Create test configs
         run: |
           mkdir -p tests
-          echo "version: '0.1'" > tests/config1.yaml
-          echo "version: '0.1'" > tests/config2.yaml
+          cat > tests/config1.yaml << 'EOF'
+          version: "0.1"
+          adapters:
+            - id: config1-test
+              prompt: "Test 1"
+              expect_substring: "test"
+              adapter:
+                - type: openai
+                  model: gpt-4o-mini
+                  max_tokens: 10
+              tags:
+                - test1
+          EOF
+          cat > tests/config2.yaml << 'EOF'
+          version: "0.1"
+          adapters:
+            - id: config2-test
+              prompt: "Test 2"
+              expect_substring: "test"
+              adapter:
+                - type: openai
+                  model: gpt-4o-mini
+                  max_tokens: 10
+              tags:
+                - test2
+          EOF
 
       - name: Test command
         uses: ./
@@ -121,12 +164,26 @@ jobs:
           cat > tests/multi-provider.yaml << 'EOF'
           version: "0.1"
           adapters:
-            - name: openai
-              model: gpt-4o-mini
-              api_key: env:OPENAI_API_KEY
-            - name: claude
-              model: claude-3-haiku
-              api_key: env:CLAUDE_API_KEY
+            - id: openai-test
+              prompt: "Say hello"
+              expect_substring: "hello"
+              adapter:
+                - type: openai
+                  model: gpt-4o-mini
+                  max_tokens: 50
+                  temperature: 0.7
+              tags:
+                - test
+            - id: claude-test
+              prompt: "Say hello"
+              expect_substring: "hello"
+              adapter:
+                - type: claude
+                  model: claude-3-haiku
+                  max_tokens: 50
+                  temperature: 0.7
+              tags:
+                - test
           EOF
 
       - name: Test with multiple fake API keys
