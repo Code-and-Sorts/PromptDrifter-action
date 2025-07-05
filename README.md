@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: Code-and-Sorts/PromptDrifter-action@v1
+      - uses: Code-and-Sorts/PromptDrifter-action@v0.0.1
         with:
           files: 'tests/promptdrifter.yaml'
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: Code-and-Sorts/PromptDrifter-action@v1
+      - uses: Code-and-Sorts/PromptDrifter-action@v0.0.1
         with:
           files: |
             tests/openai-tests.yaml
@@ -58,7 +58,7 @@ jobs:
 
 ```yaml
 - name: Initialize PromptDrifter
-  uses: Code-and-Sorts/PromptDrifter-action@v1
+  uses: Code-and-Sorts/PromptDrifter-action@v0.0.1
   with:
     command: 'init'
     directory: './prompt-tests'
@@ -68,7 +68,7 @@ jobs:
 
 ```yaml
 - name: Validate Configurations
-  uses: Code-and-Sorts/PromptDrifter-action@v1
+  uses: Code-and-Sorts/PromptDrifter-action@v0.0.1
   with:
     command: 'validate'
     files: 'config/*.yaml'
